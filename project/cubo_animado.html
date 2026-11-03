@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Cubo animado</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      /* Paleta del portafolio */
+      --bg: #001F3D;        /* Medianoche */
+      --surface: #00294A;
+      --ink: #E6FFF6;
+      --muted: #8FC9C2;
+      --line: #005B80;      /* Oriental */
+      --accent: #00FFAA;    /* Verde Primavera */
+      --persian: #00B3A1;   /* Verde Persa */
+      --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+      --font-body: "Source Sans 3", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+      color-scheme: dark;
+
+      /* Variables del cubo */
+      --size: 300px;
+      --half: calc(var(--size) / 2);
+      --c1: #001F3D;   /* color de arriba de las caras */
+      --c2: #00FFAA;   /* color de abajo de las caras */
+      --top: #005B80;  /* color de la tapa */
+      --glow: 1;       /* 1 = con brillo, 0 = sin brillo */
+    }
+
+    html, body { height: 100%; }
+    body {
+      background:
+        radial-gradient(900px 480px at 12% -8%, rgba(0, 127, 128, .40), transparent 65%),
+        radial-gradient(700px 420px at 100% 60%, rgba(0, 91, 128, .38), transparent 70%),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: 17px;
+      overflow: hidden;
+    }
+    .mono { font-family: var(--font-mono); font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+    /* ---------- Barra superior (igual que el portafolio) ---------- */
+    body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+    .topbar {
+      position: fixed; top: env(safe-area-inset-top, 0px); left: 0; right: 0; z-index: 20;
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      background: rgba(0, 31, 61, .88);
+      -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+    .bar {
+      max-width: 1120px; margin-inline: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px 24px; padding-block: 10px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; color: var(--ink); text-decoration: none; min-width: 0; }
+    .brand:focus-visible, .tabs a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+    .logo {
+      position: relative; flex: none; width: 44px; height: 44px; overflow: hidden;
+      display: grid; place-items: center;
+      background: var(--surface); border: 1.5px solid var(--accent);
+      box-shadow: 0 0 14px rgba(0, 255, 170, .28);
+      font-family: var(--font-mono); font-size: 14px; font-weight: 500; color: var(--accent);
+      transition: box-shadow .25s;
+    }
+    .logo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .brand:hover .logo { box-shadow: 0 0 22px rgba(0, 255, 170, .55); }
+    .brand-name { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; letter-spacing: -0.01em; white-space: nowrap; }
+    .tabs { display: flex; gap: 2px; list-style: none; overflow-x: auto; scrollbar-width: none; }
+    .tabs::-webkit-scrollbar { display: none; }
+    .tabs a {
+      display: block; padding: 12px 14px; white-space: nowrap; text-decoration: none;
+      font-family: var(--font-mono); font-size: 14px; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--muted); border-bottom: 2px solid transparent; transition: color .2s, border-color .2s;
+    }
+    .tabs a:hover { color: var(--ink); border-bottom-color: var(--persian); }
+    .tabs a[aria-current="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ---------- Cubo ---------- */
+    .stage {
+      position: fixed; inset: 0; padding-top: 76px;
+      display: grid; place-items: center;
+      cursor: grab; touch-action: none; user-select: none;
+    }
+    .stage.dragging { cursor: grabbing; }
+    .cube {
+      position: relative;
+      width: var(--size); height: var(--size);
+      transform-style: preserve-3d;
+      transform: rotateX(-30deg) rotateY(0deg);
+    }
+    /* Las caras y la tapa las arma el JavaScript según la figura elegida */
+    .face { position: absolute; background: linear-gradient(var(--c1), var(--c2)); }
+    .cap { position: absolute; background: var(--top); transform: rotateX(90deg) translateZ(var(--half)); }
+    .floor {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      transform-style: preserve-3d;
+      transform: rotateX(90deg) translateZ(var(--half));
+    }
+    .floor::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: var(--c2);
+      transform: translateZ(calc(var(--size) * -1.333));
+      filter: blur(20px);
+      opacity: var(--glow);
+      box-shadow: 0 0 120px color-mix(in srgb, var(--c2) 20%, transparent),
+                  0 0 200px color-mix(in srgb, var(--c2) 40%, transparent),
+                  0 0 300px color-mix(in srgb, var(--c2) 60%, transparent),
+                  0 0 400px color-mix(in srgb, var(--c2) 80%, transparent),
+                  0 0 500px var(--c2);
+    }
+
+    /* ---------- Panel de controles ---------- */
+    .panel {
+      position: fixed; z-index: 10;
+      right: max(16px, env(safe-area-inset-right, 0px));
+      bottom: max(16px, env(safe-area-inset-bottom, 0px));
+      width: min(300px, calc(100vw - 32px));
+      background: rgba(0, 41, 74, .38);
+      -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+      border: 1px solid var(--line);
+      color: var(--ink); font-size: 16px;
+    }
+    .panel summary {
+      list-style: none; cursor: pointer; padding: 14px 16px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .panel summary::-webkit-details-marker { display: none; }
+    .panel summary::after { content: "▼"; color: var(--accent); font-size: 12px; }
+    .panel:not([open]) summary::after { content: "▲"; }
+    /* Pantalla grande: panel fijo, siempre abierto */
+    .panel.wide summary { cursor: default; }
+    .panel.wide summary::after { content: none; }
+    .panel summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .panel .body { padding: 0 16px 16px; display: grid; gap: 12px; max-height: 60vh; overflow-y: auto; }
+    [hidden] { display: none !important; }
+    .group { display: grid; gap: 8px; }
+    .group > span { font-size: 16px; }
+    .shapes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .shapes button { padding: 9px 8px; font-size: 13px; letter-spacing: .02em; }
+    .shapes button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .panel p { font-size: 15px; color: var(--muted); line-height: 1.4; }
+    .row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 8px; }
+    .row input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); }
+    .row output { font-family: var(--font-mono); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .row input[type="color"] { width: 46px; height: 30px; border: 1px solid var(--line); background: none; padding: 0; cursor: pointer; }
+    .row input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); }
+    .buttons { display: flex; gap: 8px; }
+    button {
+      flex: 1; padding: 10px 12px; cursor: pointer;
+      border: 1px solid var(--persian); background: transparent; color: var(--ink);
+      font-family: var(--font-mono); font-size: 14px; letter-spacing: .04em; text-transform: uppercase;
+      transition: background .2s, color .2s;
+    }
+    button:hover { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    input:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    /* Pantalla grande: el panel ocupa todo el lateral derecho */
+    @media (min-width: 900px) {
+      :root { --bar-h: 65px; --side-w: 320px; }
+      .panel {
+        top: calc(env(safe-area-inset-top, 0px) + var(--bar-h)); right: 0; bottom: 0;
+        width: var(--side-w);
+        border-width: 0 0 0 1px;
+        padding-right: env(safe-area-inset-right, 0px);
+      }
+      .panel summary { padding: 22px 24px 8px; }
+      .panel .body { padding: 8px 24px 24px; gap: 20px; max-height: calc(100vh - var(--bar-h) - 64px); }
+      .stage { padding-right: var(--side-w); }
+    }
+    @media (min-width: 1500px) {
+      :root { --side-w: 380px; }
+      .panel .body { gap: 24px; }
+    }
+
+    /* Pantalla chica: el panel baja al borde y es una pestaña que se abre */
+    @media (max-width: 899px) {
+      .panel { left: 0; right: 0; bottom: 0; width: 100%; border-width: 1px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); }
+      .panel summary { justify-content: center; gap: 12px; }
+      .stage { padding-bottom: 60px; }
+    }
+    @media (max-width: 680px) {
+      .bar { flex-wrap: wrap; padding-block: 8px 0; }
+      .tabs { width: 100%; order: 2; }
+      .stage { padding-top: 130px; padding-bottom: 80px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+  </style>
+</head>
+<body>
+  <nav class="topbar" aria-label="Navegación principal">
+    <div class="bar">
+      <a class="brand" href="../../index.html">
+        <span class="logo"><span>MC</span><img src="../../image/foto.jpg" alt="" onerror="this.remove()"></span>
+        <span class="brand-name">Miguel Cano</span>
+      </a>
+      <ul class="tabs">
+        <li><a href="../../index.html#sobre-mi">Sobre mí</a></li>
+        <li><a href="../../index.html#trayectoria">Trayectoria</a></li>
+        <li><a href="../../index.html#proyectos" aria-current="true">Proyectos</a></li>
+        <li><a href="../../index.html#herramientas">Herramientas</a></li>
+        <li><a href="../../index.html#contacto">Contacto</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="stage" id="stage">
+    <div class="cube" id="cube"></div>
+  </div>
+
+  <details class="panel" id="panel" open>
+    <summary class="mono">Controles de la figura</summary>
+    <div class="body">
+    <p>Arrastra la figura para girarla. Cambia su tamaño con el deslizador, la rueda del mouse o pellizcando con dos dedos.</p>
+
+    <div class="group">
+      <span>Figura</span>
+      <div class="shapes" id="shapes" role="group" aria-label="Figura">
+        <button type="button" data-shape="cubo" aria-pressed="true">Cubo</button>
+        <button type="button" data-shape="prisma3" aria-pressed="false">Prisma triangular</button>
+        <button type="button" data-shape="prisma5" aria-pressed="false">Prisma pentagonal</button>
+        <button type="button" data-shape="prisma6" aria-pressed="false">Prisma hexagonal</button>
+        <button type="button" data-shape="cilindro" aria-pressed="false">Cilindro</button>
+        <button type="button" data-shape="piramide3" aria-pressed="false">Pirámide triangular</button>
+        <button type="button" data-shape="piramide4" aria-pressed="false">Pirámide cuadrada</button>
+        <button type="button" data-shape="octaedro" aria-pressed="false">Octaedro</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <label for="speed">Velocidad</label><output id="speedOut"></output>
+      <input type="range" id="speed" min="-240" max="240" value="90">
+    </div>
+    <div class="row">
+      <label for="size">Tamaño</label><output id="sizeOut"></output>
+      <input type="range" id="size" min="100" max="700" value="300">
+    </div>
+    <div class="row"><label for="c1">Color de arriba</label><input type="color" id="c1" value="#001f3d"></div>
+    <div class="row"><label for="c2">Color de abajo</label><input type="color" id="c2" value="#00ffaa"></div>
+    <div class="row" id="topRow"><label for="top">Color de la tapa</label><input type="color" id="top" value="#005b80"></div>
+    <div class="row"><label for="glow">Brillo</label><input type="checkbox" id="glow" checked></div>
+
+    <div class="buttons">
+      <button type="button" id="toggle">Pausar</button>
+      <button type="button" id="reset">Reiniciar</button>
+    </div>
+    </div>
+  </details>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var stage = document.getElementById('stage');
+      var cube = document.getElementById('cube');
+      var $ = function (id) { return document.getElementById(id); };
+
+      var DEFAULTS = { shape: 'cubo', speed: 90, size: 300, c1: '#001F3D', c2: '#00FFAA', top: '#005B80', glow: true };
+      var touches = {}; var rx = -30, ry = 0, playing = true, dragging = false, last = 0, px = 0, py = 0;
+
+      function draw() { cube.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)'; }
+
+      function maxSize() { return window.innerWidth >= 900 ? 700 : Math.max(120, Math.round(window.innerWidth * 0.7)); }
+      function setSize(v) {
+        v = Math.round(Math.max(100, Math.min(Number(v), maxSize())));
+        root.style.setProperty('--size', v + 'px');
+        $('size').max = maxSize();
+        $('size').value = v;
+        $('sizeOut').textContent = v + ' px';
+      }
+      function curSize() { return Number($('size').value); }
+      function setSpeed(v) {
+        $('speed').value = v;
+        $('speedOut').textContent = v + '°/s';
+      }
+      function apply(d) {
+        setSpeed(d.speed);
+        setSize(d.size);
+        ['c1', 'c2', 'top'].forEach(function (k) {
+          root.style.setProperty('--' + k, d[k]);
+          $(k).value = d[k];
+        });
+        root.style.setProperty('--glow', d.glow ? 1 : 0);
+        $('glow').checked = d.glow;
+      }
+
+
+      /* ---------- Figuras ---------- */
+      var R0 = Math.SQRT1_2;   /* radio base: el del cubo, para que todas midan parecido */
+      var SHAPES = {
+        cubo:      { type: 'prism',   n: 4 },
+        prisma3:   { type: 'prism',   n: 3 },
+        prisma5:   { type: 'prism',   n: 5 },
+        prisma6:   { type: 'prism',   n: 6 },
+        cilindro:  { type: 'prism',   n: 24 },
+        piramide3: { type: 'pyramid', n: 3 },
+        piramide4: { type: 'pyramid', n: 4 },
+        octaedro:  { type: 'octa',    n: 4 }
+      };
+      var shapeKey = 'cubo';
+      function k(x) { return 'calc(var(--size) * ' + x.toFixed(4) + ')'; }
+      function el(cls) { var d = document.createElement('div'); d.className = cls; return d; }
+      function face(wk, lk, offY, theta, zk, phi, clip) {
+        var f = el('face');
+        f.style.width = k(wk);
+        f.style.height = k(lk);
+        f.style.left = 'calc(50% - ' + k(wk / 2) + ')';
+        f.style.top = 'calc(50% + ' + k(offY - lk / 2) + ')';
+        f.style.transform = 'rotateY(' + theta + 'deg) translateZ(' + k(zk) + ') rotateX(' + phi + 'deg)';
+        if (clip) f.style.clipPath = clip;
+        cube.appendChild(f);
+      }
+      function build(key) {
+        var sh = SHAPES[key], n = sh.n, i;
+        shapeKey = key;
+        cube.innerHTML = '';
+        cube.appendChild(el('floor'));
+
+        var a = R0 * Math.cos(Math.PI / n);        /* distancia del centro al medio de cada lado */
+        var w = 2 * R0 * Math.sin(Math.PI / n);    /* ancho de cada lado */
+
+        if (sh.type === 'prism') {
+          var cap = el('cap'), pts = [];
+          for (i = 0; i < n; i++) {
+            var ang = (2 * i + 1) * Math.PI / n;
+            pts.push((50 + 50 * Math.sin(ang)).toFixed(2) + '% ' + (50 + 50 * Math.cos(ang)).toFixed(2) + '%');
+          }
+          cap.style.width = cap.style.height = k(2 * R0);
+          cap.style.left = cap.style.top = 'calc(50% - ' + k(R0) + ')';
+          cap.style.clipPath = 'polygon(' + pts.join(', ') + ')';
+          cube.appendChild(cap);
+          for (i = 0; i < n; i++) face(w, 1, 0, 360 / n * i, a, 0, null);
+        } else if (sh.type === 'pyramid') {
+          var H = 1, L = Math.hypot(H, a), tilt = Math.atan(a / H) * 180 / Math.PI;
+          for (i = 0; i < n; i++) face(w, L, 0, 360 / n * i, a / 2, tilt, 'polygon(50% 0, 0 100%, 100% 100%)');
+        } else {
+          var Ho = R0, Lo = Math.hypot(Ho, a), to = Math.atan(a / Ho) * 180 / Math.PI;
+          for (i = 0; i < n; i++) {
+            face(w, Lo, -Ho / 2, 360 / n * i, a / 2, to, 'polygon(50% 0, 0 100%, 100% 100%)');
+            face(w, Lo, Ho / 2, 360 / n * i, a / 2, -to, 'polygon(0 0, 100% 0, 50% 100%)');
+          }
+        }
+        $('topRow').hidden = sh.type !== 'prism';   /* sin tapa plana no hay color de tapa */
+        [].forEach.call(document.querySelectorAll('#shapes button'), function (b) {
+          b.setAttribute('aria-pressed', b.dataset.shape === key ? 'true' : 'false');
+        });
+      }
+      $('shapes').addEventListener('click', function (e) {
+        var b = e.target.closest('button');
+        if (b) build(b.dataset.shape);
+      });
+
+      /* Controles */
+      $('speed').addEventListener('input', function (e) { setSpeed(e.target.value); });
+      $('size').addEventListener('input', function (e) { setSize(e.target.value); });
+      ['c1', 'c2', 'top'].forEach(function (k) {
+        $(k).addEventListener('input', function (e) { root.style.setProperty('--' + k, e.target.value); });
+      });
+      $('glow').addEventListener('change', function (e) { root.style.setProperty('--glow', e.target.checked ? 1 : 0); });
+      $('toggle').addEventListener('click', function () {
+        playing = !playing;
+        this.textContent = playing ? 'Pausar' : 'Reanudar';
+      });
+      $('reset').addEventListener('click', function () {
+        rx = -30; ry = 0; playing = true;
+        build(DEFAULTS.shape);
+        $('toggle').textContent = 'Pausar';
+        apply(DEFAULTS);
+        draw();
+      });
+
+      /* Arrastrar con mouse o dedo */
+      stage.addEventListener('pointerdown', function (e) {
+        dragging = true; px = e.clientX; py = e.clientY;
+        stage.classList.add('dragging');
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', function (e) {
+        if (!dragging || Object.keys(touches || {}).length > 1) return;
+        ry += (e.clientX - px) * 0.6;
+        rx = Math.max(-90, Math.min(90, rx - (e.clientY - py) * 0.6));
+        px = e.clientX; py = e.clientY;
+        draw();
+      });
+      function stop() { dragging = false; stage.classList.remove('dragging'); }
+      stage.addEventListener('pointerup', stop);
+      stage.addEventListener('pointercancel', stop);
+
+      /* Tamaño con la rueda del mouse */
+      stage.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        setSize(curSize() - e.deltaY * 0.4);
+      }, { passive: false });
+
+      /* Tamaño con dos dedos (pellizcar) */
+      var pinch = 0;
+      function dist() {
+        var k = Object.keys(touches);
+        if (k.length < 2) return 0;
+        return Math.hypot(touches[k[0]].x - touches[k[1]].x, touches[k[0]].y - touches[k[1]].y);
+      }
+      stage.addEventListener('pointerdown', function (e) {
+        touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+        pinch = dist();
+      });
+      stage.addEventListener('pointermove', function (e) {
+        if (!touches[e.pointerId]) return;
+        touches[e.pointerId] = { x: e.clientX, y: e.clientY };
+        var d = dist();
+        if (d && pinch) { setSize(curSize() * d / pinch); pinch = d; }
+      });
+      function release(e) { delete touches[e.pointerId]; pinch = dist(); }
+      stage.addEventListener('pointerup', release);
+      stage.addEventListener('pointercancel', release);
+
+      /* Giro automático */
+      function loop(t) {
+        var dt = last ? (t - last) / 1000 : 0;
+        last = t;
+        if (playing && !dragging) { ry += Number($('speed').value) * dt; draw(); }
+        requestAnimationFrame(loop);
+      }
+
+      var panel = $('panel');
+      var wasWide = null;
+      function layout() {
+        var wide = window.innerWidth >= 900;
+        panel.classList.toggle('wide', wide);
+        if (wide) panel.open = true;
+        else if (wasWide) panel.open = false;   /* al achicar, el panel pasa a ser pestaña cerrada */
+        wasWide = wide;
+        setSize(curSize());
+      }
+      panel.querySelector('summary').addEventListener('click', function (e) {
+        if (panel.classList.contains('wide')) e.preventDefault();
+      });
+      window.addEventListener('resize', layout);
+
+      build(DEFAULTS.shape);
+      apply(DEFAULTS);
+      panel.open = window.innerWidth >= 900;
+      layout();
+      draw();
+      requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

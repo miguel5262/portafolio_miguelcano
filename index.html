@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portafolio de Miguel Cano</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/style/styles.css">
+</head>
+<body>
+
+<script>document.documentElement.classList.add('js');</script>
+
+<nav class="topbar" aria-label="Navegación principal">
+  <div class="bar">
+    <a class="brand" href="#inicio">
+      <!-- <span class="logo"><span>MC</span><img src="/image/foto.jpg" alt=""></span> -->
+      <span class="brand-name">Miguel Cano</span>
+    </a>
+    <ul class="tabs">
+      <li><a href="#sobre-mi">Sobre mí</a></li>
+      <li><a href="#trayectoria">Trayectoria</a></li>
+      <li><a href="#proyectos">Proyectos</a></li>
+      <li><a href="#herramientas">Herramientas</a></li>
+      <li><a href="#contacto">Contacto</a></li>
+    </ul>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="ruler" aria-hidden="true"></div>
+
+  <header class="hero" id="inicio">
+    <div class="hero-text">
+    <p class="mono">Medellín, Colombia · Portafolio 2026</p>
+    <h1>Miguel Angel Cano Rojas</h1>
+    <p class="lede">Estudiante de ingeniería de software y técnico en programación, con experiencia como desarrollador junior.</p>
+    <ul class="tags">
+      <li class="fill">Ingeniería de software</li>
+      <li>Técnico SENA</li>
+      <li>Desarrollador junior</li>
+    </ul>
+    </div>
+    <figure class="photo" aria-label="Foto de Miguel Angel Cano Rojas">
+      <img src="/image/foto_2.png" alt="">
+      <span>Tu foto aquí</span>
+    </figure>
+  </header>
+
+  <section class="row reveal" id="sobre-mi">
+    <div class="label mono">Sobre mí</div>
+    <div>
+      <h2>Quién soy</h2>
+      <p>Soy técnico en programación de software del SENA desde 2021 y desde agosto de 2026 estudio ingeniería de software en el Pascual Bravo, en Medellín.</p>
+      <p>He trabajado en logística, operación y desarrollo de software junior, y busco seguir creciendo como programador.</p>
+    </div>
+  </section>
+
+  <section class="row reveal" id="trayectoria">
+    <div class="label mono">Trayectoria</div>
+    <div>
+      <h2>Estudios y experiencia</h2>
+      <ol class="path">
+        <li>
+          <span class="when">Ago 2026</span>
+          <div><strong>Ingeniería de software</strong><span>Pascual Bravo, Medellín</span></div>
+        </li>
+        <li>
+          <span class="when">2021</span>
+          <div><strong>Técnico en programación de software</strong><span>SENA</span></div>
+        </li>
+        <li>
+          <span class="when">Antes</span>
+          <div><strong>Desarrollador de software junior</strong><span>También auxiliar logístico y operario.</span></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="row reveal" id="proyectos">
+    <div class="label mono">Proyectos</div>
+    <div>
+      <h2>Trabajo que puedes ver</h2>
+      <div class="slots">
+        <article class="slot project">
+          <div class="cube-stage" aria-hidden="true">
+            <div class="cube">
+              <span class="face f1"></span><span class="face f2"></span><span class="face f3"></span>
+              <span class="face f4"></span><span class="face f5"></span><span class="face f6"></span>
+            </div>
+          </div>
+          <h3>figura 3D</h3>
+          <p>figuras en tres dimensiones.</p>
+          <ul class="tags"><li class="fill">CSS</li><li class="fill">JavaScript</li></ul>
+          <a class="mono project-link" href="/project/cubo_animado.html">Ver proyecto →</a>
+        </article>
+        <article class="slot">
+          <h3>Proyecto 2</h3>
+          <p>Un proyecto de clase o personal. Captura de pantalla y una frase sobre tu parte del trabajo.</p>
+          <span class="mono">Por completar</span>
+        </article>
+        <article class="slot">
+          <h3>Proyecto 3</h3>
+          <p>Algo de tu etapa como desarrollador junior, si puedes mostrarlo.</p>
+          <span class="mono">Por completar</span>
+        </article>
+      </div>
+      <!-- <p class="note">Estos espacios están vacíos a propósito. Cuéntame qué has hecho y los lleno con texto real.</p> -->
+    </div>
+  </section>
+
+  <section class="row reveal" id="herramientas">
+    <div class="label mono">Herramientas</div>
+    <div>
+      <h2>Lenguajes y tecnologías</h2>
+      <ul class="tags">
+        <li class="fill">JavaScript</li>
+        <li class="fill">Node.js</li>
+        <li class="fill">React</li>
+        <li class="fill">HTML</li>
+        <li class="fill">CSS</li>
+        <li class="fill">Git</li>
+      </ul>
+      <!-- <p class="note">Si usas también alguna base de datos u otra herramienta, la agrego a esta lista.</p> -->
+    </div>
+  </section>
+
+  <section class="row reveal" id="contacto">
+    <div class="label mono">Contacto</div>
+    <div>
+      <h2>Hablemos</h2>
+      <dl class="contact">
+        <dt>Correo</dt><dd><span class="todo">miguel.cano@example.com</span></dd>
+        <dt>GitHub</dt><dd><span class="todo">github.com/miguelcano</span></dd>
+        <dt>LinkedIn</dt><dd><span class="todo">linkedin.com/in/miguelcano</span></dd>
+        <dt>Ciudad</dt><dd>Medellín, Antioquia</dd>
+      </dl>
+    </div>
+  </section>
+
+  <footer class="mono">
+    <span>Miguel Angel Cano Rojas</span>
+    <span>Medellín · 2026</span>
+  </footer>
+</div>
+
+<script src="/script/script.js"></script>
+
+</body>
+</html>
